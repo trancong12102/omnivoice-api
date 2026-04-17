@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     default_num_step: int = 32
     warmup_on_startup: bool = False
     hf_endpoint: str | None = None
+    api_key: str | None = None
 
     s3_endpoint_url: str = "http://localhost:9000"
     s3_public_endpoint_url: str | None = None

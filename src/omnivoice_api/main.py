@@ -6,7 +6,7 @@ import tempfile
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 
 from .config import settings
 from .schemas import (
@@ -17,6 +17,7 @@ from .schemas import (
     PresignUploadResponse,
     TTSResponse,
 )
+from .security import require_api_key
 from .service import service
 from .storage import storage
 
@@ -48,7 +49,11 @@ def health() -> HealthResponse:
     )
 
 
-@app.post("/v1/uploads/presign", response_model=PresignUploadResponse)
+@app.post(
+    "/v1/uploads/presign",
+    response_model=PresignUploadResponse,
+    dependencies=[Depends(require_api_key)],
+)
 async def presign_upload(req: PresignUploadRequest) -> PresignUploadResponse:
     suffix = Path(req.filename or "ref.wav").suffix or ".wav"
     key = storage.new_key(settings.s3_ref_prefix, suffix)
@@ -61,7 +66,11 @@ async def presign_upload(req: PresignUploadRequest) -> PresignUploadResponse:
     )
 
 
-@app.post("/v1/tts/clone", response_model=TTSResponse)
+@app.post(
+    "/v1/tts/clone",
+    response_model=TTSResponse,
+    dependencies=[Depends(require_api_key)],
+)
 async def tts_clone(req: CloneRequest) -> TTSResponse:
     _validate_text(req.text)
     service.load()
@@ -84,7 +93,11 @@ async def tts_clone(req: CloneRequest) -> TTSResponse:
     return await _put_and_presign(wav)
 
 
-@app.post("/v1/tts/design", response_model=TTSResponse)
+@app.post(
+    "/v1/tts/design",
+    response_model=TTSResponse,
+    dependencies=[Depends(require_api_key)],
+)
 async def tts_design(req: DesignRequest) -> TTSResponse:
     _validate_text(req.text)
     service.load()

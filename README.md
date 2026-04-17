@@ -65,6 +65,16 @@ client --POST /v1/tts/clone--> api      (2) generate
 client --GET presigned--> S3            (4) download wav
 ```
 
+## Auth
+
+Optional fixed API key. Set `OMNIVOICE_API_KEY=<secret>` to enable — clients must then send header `X-API-Key: <secret>` on every protected endpoint. Unset or empty disables auth (useful for local dev).
+
+Scope:
+- Protected: `POST /v1/uploads/presign`, `POST /v1/tts/clone`, `POST /v1/tts/design`
+- Open: `GET /health`
+
+Missing/invalid key → `401 Unauthorized`. Tests read `OMNIVOICE_API_KEY` from env and attach the header automatically.
+
 ## Endpoints
 
 ### `GET /health`
@@ -108,11 +118,13 @@ Response:
 { "output_key": "out/4f9...e2.wav", "download_url": "https://...", "expires_in": 3600 }
 ```
 
-End-to-end example:
+End-to-end example (set `KEY_HEADER=` empty if auth disabled):
 ```bash
+KEY_HEADER="X-API-Key: $OMNIVOICE_API_KEY"
+
 # 1) presign
 read UPLOAD_URL KEY < <(curl -s -X POST http://localhost:8000/v1/uploads/presign \
-  -H 'content-type: application/json' \
+  -H 'content-type: application/json' -H "$KEY_HEADER" \
   -d '{"filename":"ref.wav"}' \
   | jq -r '.upload_url + " " + .key')
 
@@ -121,7 +133,7 @@ curl -X PUT --upload-file ref.wav -H 'content-type: audio/wav' "$UPLOAD_URL"
 
 # 3) generate
 DL=$(curl -s -X POST http://localhost:8000/v1/tts/clone \
-  -H 'content-type: application/json' \
+  -H 'content-type: application/json' -H "$KEY_HEADER" \
   -d "{\"text\":\"Hello from OmniVoice.\",\"ref_audio_key\":\"$KEY\",\"ref_text\":\"This is the reference transcript.\"}" \
   | jq -r '.download_url')
 
@@ -134,6 +146,7 @@ curl -o out.wav "$DL"
 ```bash
 curl -X POST http://localhost:8000/v1/tts/design \
   -H 'content-type: application/json' \
+  -H "X-API-Key: $OMNIVOICE_API_KEY" \
   -d '{"text":"Hello world.","instruct":"female, british accent, calm","num_step":32}'
 ```
 
