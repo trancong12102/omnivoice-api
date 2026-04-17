@@ -159,6 +159,26 @@ docker pull ghcr.io/<org>/<repo>:latest
 docker run --rm --gpus all -p 8000:8000 --env-file .env ghcr.io/<org>/<repo>:latest
 ```
 
+### Production deploy via docker-compose
+
+`docker-compose.prod.yml` pulls `ghcr.io/trancong12102/omnivoice-api:latest`, mounts a persistent volume for HuggingFace model cache, reserves all GPUs, and reads R2 credentials from `.env.prod`.
+
+```bash
+cp .env.prod.example .env.prod         # fill in R2 creds + bucket
+docker login ghcr.io -u <gh-username>  # GHCR pull (skip if image is public)
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml logs -f api
+```
+
+Update to the latest image:
+```bash
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d   # recreates with new image
+```
+
+The HF model cache lives in the named volume `hf_cache` so the model is downloaded only once per host. Container has `restart: unless-stopped`, healthcheck wired to `/health`, and JSON log rotation (20 MB × 5 files).
+
 ## Tests
 
 End-to-end test (requires the server + MinIO already running):
