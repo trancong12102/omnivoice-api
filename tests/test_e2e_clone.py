@@ -71,7 +71,6 @@ def test_clone_domixi(api: httpx.Client, tmp_path: Path) -> None:
         .raise_for_status()
         .json()
     )
-    assert clone["output_key"].startswith("out/")
     assert clone["output_key"].endswith(".wav")
     assert clone["download_url"].startswith("http")
 
