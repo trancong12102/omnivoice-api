@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "omnivoice-api"
+version = "0.1.0"
+description = "HTTP API wrapping k2-fsa/OmniVoice zero-shot TTS"
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/omnivoice_api"]

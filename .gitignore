@@ -1,0 +1,15 @@
+.pixi/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.DS_Store
+dist/
+build/
+*.egg-info/
+outputs/
+*.wav
+*.mp3
+!tests/fixtures/*.wav
+!tests/fixtures/*.mp3
